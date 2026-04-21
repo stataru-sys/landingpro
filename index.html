@@ -12,15 +12,38 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 
   <style>
-    /* Говорим браузеру использовать шрифт Inter для всей страницы */
     body { font-family: 'Inter', sans-serif; }
+    html { scroll-behavior: smooth; }
 
     /*
-      scroll-behavior: smooth — включает плавную прокрутку для ВСЕЙ страницы.
-      Работает для всех ссылок вида href="#section-id".
-      Применяем к html (корневому элементу), а не к body.
+      Начальное состояние элементов с анимацией:
+      невидимые (opacity: 0) и сдвинутые вниз на 30px.
+      Когда элемент попадёт в поле зрения — добавим класс .visible
+      и он плавно появится на своём месте.
     */
-    html { scroll-behavior: smooth; }
+    .animate {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    /* Финальное состояние — полностью видимый, на месте */
+    .animate.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /*
+      Задержка появления — чтобы карточки в одном ряду
+      появлялись одна за другой, а не все сразу.
+      delay-1, delay-2, delay-3 добавляют паузу перед стартом анимации.
+    */
+    .delay-1 { transition-delay: 0.1s; }
+    .delay-2 { transition-delay: 0.2s; }
+    .delay-3 { transition-delay: 0.3s; }
+    .delay-4 { transition-delay: 0.4s; }
+    .delay-5 { transition-delay: 0.5s; }
+    .delay-6 { transition-delay: 0.6s; }
   </style>
 </head>
 
@@ -89,7 +112,7 @@
       -->
 
       <!-- Левая часть: текст -->
-      <div>
+      <div class="animate">
         <!-- Маленький бейджик над заголовком -->
         <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-6">
           Лендинги под ключ
@@ -152,7 +175,7 @@
       </div>
 
       <!-- Правая часть: визуальный элемент -->
-      <div class="hidden lg:flex justify-center items-center">
+      <div class="hidden lg:flex justify-center items-center animate delay-2">
         <!--
           hidden = скрыто на мобильном (нет места)
           lg:flex = показывается только на большом экране
@@ -202,7 +225,7 @@
     <div class="max-w-6xl mx-auto px-6">
 
       <!-- Заголовок блока -->
-      <div class="text-center mb-16">
+      <div class="text-center mb-16 animate">
         <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
           Что мы делаем
         </span>
@@ -221,7 +244,7 @@
         -->
 
         <!-- Карточка 1 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all">
+        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-1">
           <!--
             group = позволяет дочерним элементам реагировать на hover родителя
             rounded-2xl = сильно скруглённые углы
@@ -239,7 +262,7 @@
         </div>
 
         <!-- Карточка 2 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all">
+        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-2">
           <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
             <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -250,7 +273,7 @@
         </div>
 
         <!-- Карточка 3 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all">
+        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-3">
           <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
             <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -261,7 +284,7 @@
         </div>
 
         <!-- Карточка 4 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all">
+        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-1">
           <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
             <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -272,7 +295,7 @@
         </div>
 
         <!-- Карточка 5 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all">
+        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-2">
           <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
             <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
@@ -283,7 +306,7 @@
         </div>
 
         <!-- Карточка 6 — выделяем цветом -->
-        <div class="group p-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all">
+        <div class="group p-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all animate delay-3">
           <div class="w-14 h-14 bg-indigo-500 rounded-xl flex items-center justify-center mb-6">
             <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -302,7 +325,7 @@
   <section class="py-24 bg-gray-50">
     <div class="max-w-6xl mx-auto px-6">
 
-      <div class="text-center mb-16">
+      <div class="text-center mb-16 animate">
         <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
           Процесс
         </span>
@@ -314,7 +337,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
         <!-- Шаг 1 -->
-        <div class="relative">
+        <div class="relative animate delay-1">
           <!-- Номер шага -->
           <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
             1
@@ -326,7 +349,7 @@
         </div>
 
         <!-- Шаг 2 -->
-        <div class="relative">
+        <div class="relative animate delay-2">
           <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
             2
           </div>
@@ -336,7 +359,7 @@
         </div>
 
         <!-- Шаг 3 -->
-        <div class="relative">
+        <div class="relative animate delay-3">
           <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
             3
           </div>
@@ -346,7 +369,7 @@
         </div>
 
         <!-- Шаг 4 -->
-        <div>
+        <div class="animate delay-4">
           <div class="w-12 h-12 bg-green-500 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
             ✓
           </div>
@@ -368,7 +391,7 @@
     -->
     <div class="max-w-6xl mx-auto px-6">
 
-      <div class="text-center mb-16">
+      <div class="text-center mb-16 animate">
         <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
           Портфолио
         </span>
@@ -380,7 +403,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         <!-- Проект 1 -->
-        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all">
+        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all animate delay-1">
           <!-- overflow-hidden = содержимое не вылезает за скруглённые углы -->
 
           <!-- Превью проекта (цветной блок вместо скриншота) -->
@@ -404,7 +427,7 @@
         </div>
 
         <!-- Проект 2 -->
-        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all">
+        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all animate delay-2">
           <div class="h-48 bg-gradient-to-br from-orange-400 to-pink-600 relative overflow-hidden">
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white text-center">
@@ -423,7 +446,7 @@
         </div>
 
         <!-- Проект 3 -->
-        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all">
+        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all animate delay-3">
           <div class="h-48 bg-gradient-to-br from-green-400 to-teal-600 relative overflow-hidden">
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white text-center">
@@ -450,7 +473,7 @@
   <section class="py-24 bg-gray-50">
     <div class="max-w-6xl mx-auto px-6">
 
-      <div class="text-center mb-16">
+      <div class="text-center mb-16 animate">
         <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
           Отзывы
         </span>
@@ -461,7 +484,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         <!-- Отзыв 1 -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all">
+        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all animate delay-1">
           <!-- Звёзды -->
           <div class="flex gap-1 mb-6">
             <!-- Повторяем иконку звезды 5 раз -->
@@ -489,7 +512,7 @@
         </div>
 
         <!-- Отзыв 2 -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all">
+        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all animate delay-2">
           <div class="flex gap-1 mb-6">
             <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
             <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -512,7 +535,7 @@
         </div>
 
         <!-- Отзыв 3 -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all">
+        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all animate delay-3">
           <div class="flex gap-1 mb-6">
             <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
             <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -662,6 +685,58 @@
     </div>
   </footer>
 
+
+  <script>
+    /*
+      Intersection Observer — "наблюдатель пересечений".
+      Он следит: когда элемент входит в видимую область экрана —
+      вызывает нашу функцию.
+
+      Это современный и эффективный способ.
+      Альтернатива — слушать событие scroll и вручную считать
+      координаты каждого элемента. Это медленнее и сложнее.
+    */
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        /*
+          entries — массив элементов которые изменили своё состояние
+          (вошли в экран или вышли из него).
+          Перебираем каждый:
+        */
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            /*
+              isIntersecting = true означает: элемент сейчас виден на экране.
+              Добавляем класс visible — CSS включит анимацию появления.
+            */
+            entry.target.classList.add('visible');
+            /*
+              После того как элемент появился — перестаём за ним следить.
+              Иначе анимация сбрасывалась бы при каждом прокруте вверх-вниз.
+            */
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        /*
+          threshold: 0.1 — запускать анимацию когда 10% элемента
+          уже видно на экране. Если поставить 0 — анимация начнётся
+          как только хотя бы 1px элемента появится в поле зрения.
+        */
+        threshold: 0.1,
+      }
+    );
+
+    /*
+      Находим все элементы с классом animate на странице
+      и начинаем за ними наблюдать.
+    */
+    document.querySelectorAll('.animate').forEach((el) => {
+      observer.observe(el);
+    });
+  </script>
 
 </body>
 </html>
