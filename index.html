@@ -5,210 +5,280 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LandingPro — создаём лендинги которые продают</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Подключаем красивые шрифты от Google (бесплатно) -->
+  <!-- Настраиваем Tailwind: добавляем свои цвета -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            /*
+              Создаём собственную палитру.
+              cream = тёплый кремовый (основной фон)
+              sand  = чуть темнее, для секций
+              olive = тёмный оливковый (вместо indigo)
+              bark  = тёмно-коричневый (текст)
+            */
+            cream: '#F0E9DC',
+            sand:  '#E5DBCC',
+            olive: '#4A4535',
+            bark:  '#1C1A16',
+          },
+          fontFamily: {
+            sans:    ['Inter', 'sans-serif'],
+            display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            /* display — используем для всех крупных заголовков */
+          }
+        }
+      }
+    }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+  <!--
+    Подключаем два шрифта:
+    Inter — для основного текста (читабельный, нейтральный)
+    Cormorant Garamond — для заголовков (элегантный, с засечками,
+    есть курсив который придаёт рукописный характер)
+  -->
 
   <style>
-    body { font-family: 'Inter', sans-serif; }
     html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background-color: #F0E9DC; }
 
-    /*
-      Начальное состояние элементов с анимацией:
-      невидимые (opacity: 0) и сдвинутые вниз на 30px.
-      Когда элемент попадёт в поле зрения — добавим класс .visible
-      и он плавно появится на своём месте.
-    */
+    /* ── ЗЕРНИСТОСТЬ ─────────────────────────────────────────────
+       Псевдоэлемент ::before на body накладывает поверх всей страницы
+       полупрозрачный шум (grain). Это CSS-трюк — реальная текстура
+       без картинки: SVG-фильтр генерирует случайный шум прямо в браузере.
+    ─────────────────────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;           /* висит поверх всего при скролле */
+      inset: 0;                  /* растянут на весь экран */
+      pointer-events: none;      /* клики проходят сквозь него */
+      z-index: 100;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px;
+    }
+
+    /* ── АНИМАЦИИ ─────────────────────────────────────────────── */
     .animate {
       opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
     }
+    .animate.visible { opacity: 1; transform: translateY(0); }
 
-    /* Финальное состояние — полностью видимый, на месте */
-    .animate.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /*
-      Задержка появления — чтобы карточки в одном ряду
-      появлялись одна за другой, а не все сразу.
-      delay-1, delay-2, delay-3 добавляют паузу перед стартом анимации.
-    */
     .delay-1 { transition-delay: 0.1s; }
     .delay-2 { transition-delay: 0.2s; }
     .delay-3 { transition-delay: 0.3s; }
     .delay-4 { transition-delay: 0.4s; }
     .delay-5 { transition-delay: 0.5s; }
-    .delay-6 { transition-delay: 0.6s; }
+
+    /* ── РАЗМЫТЫЕ ДЕКОРАТИВНЫЕ ПЯТНА ─────────────────────────────
+       Абсолютно позиционированные круги с blur — имитируют
+       световые блики как на сайте-референсе.
+    ─────────────────────────────────────────────────────────────── */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    /* ── OUTLINE-ТЕКСТ ────────────────────────────────────────────
+       Буквы полые — виден только контур.
+       -webkit-text-stroke задаёт толщину и цвет обводки,
+       color: transparent делает заливку прозрачной.
+    ─────────────────────────────────────────────────────────────── */
+    .text-outline {
+      -webkit-text-stroke: 1.5px rgba(28, 26, 22, 0.15);
+      color: transparent;
+      user-select: none;
+    }
+
+    /* ── БЕГУЩАЯ СТРОКА ───────────────────────────────────────────
+       Контент дублируется дважды в HTML.
+       translateX(-50%) сдвигает на половину — и цикл незаметен.
+    ─────────────────────────────────────────────────────────────── */
+    @keyframes marquee-left  { from { transform: translateX(0);    } to { transform: translateX(-50%); } }
+    @keyframes marquee-right { from { transform: translateX(-50%); } to { transform: translateX(0);    } }
+
+    .marquee-left  { animation: marquee-left  30s linear infinite; white-space: nowrap; display: flex; }
+    .marquee-right { animation: marquee-right 30s linear infinite; white-space: nowrap; display: flex; }
+
+    /* ── SCRAMBLE (глитч-эффект текста) ──────────────────────────
+       Класс нужен только как якорь для JS — стили не меняем.
+    ─────────────────────────────────────────────────────────────── */
+    .scramble { display: inline; }
+
+    /* ── КАСТОМНЫЙ КУРСОР ────────────────────────────────────────
+       Скрываем системный курсор и рисуем свой из двух кружков:
+       - cursor-dot: маленький, следует точно за мышью
+       - cursor-ring: большой, следует с задержкой (lerp-эффект)
+       При наведении на кликабельные элементы ring расширяется.
+    ─────────────────────────────────────────────────────────────── */
+    * { cursor: none !important; }
+
+    #cursor-dot {
+      position: fixed;
+      width: 6px; height: 6px;
+      background: #1C1A16;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s;
+    }
+    #cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(28,26,22,0.35);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.35s ease, height 0.35s ease,
+                  border-color 0.35s ease, background 0.35s ease;
+    }
+
+    /* Состояние "наведён на кнопку" */
+    body.cursor-hover #cursor-ring {
+      width: 64px; height: 64px;
+      border-color: rgba(28,26,22,0.15);
+      background: rgba(28,26,22,0.06);
+    }
+    body.cursor-hover #cursor-dot {
+      width: 4px; height: 4px;
+      background: #4A4535;
+    }
+
+    /* На тёмном фоне курсор светлый */
+    body.cursor-dark #cursor-dot  { background: #F0E9DC; }
+    body.cursor-dark #cursor-ring { border-color: rgba(240,233,220,0.3); }
+    body.cursor-dark.cursor-hover #cursor-ring { background: rgba(240,233,220,0.06); }
+
+    /* ── WORD REVEAL ──────────────────────────────────────────────
+       Каждое слово обёрнуто в .word-wrap (overflow:hidden).
+       Внутри .word — сдвинут вниз, при .visible — возвращается.
+    ─────────────────────────────────────────────────────────────── */
+    .word-wrap {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+    }
+    .word {
+      display: inline-block;
+      transform: translateY(110%);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-words.visible .word { transform: translateY(0); }
+    .word:nth-child(1)  { transition-delay: 0.00s; }
+    .word:nth-child(2)  { transition-delay: 0.07s; }
+    .word:nth-child(3)  { transition-delay: 0.14s; }
+    .word:nth-child(4)  { transition-delay: 0.21s; }
+    .word:nth-child(5)  { transition-delay: 0.28s; }
+    .word:nth-child(6)  { transition-delay: 0.35s; }
   </style>
 </head>
 
-<body class="bg-white text-gray-900">
-  <!--
-    class="..." — это классы Tailwind CSS.
-    Вместо того чтобы писать отдельный CSS-файл,
-    мы добавляем готовые классы прямо в HTML.
-    bg-white = белый фон, text-gray-900 = почти чёрный текст.
-  -->
+<body class="text-bark">
 
+  <!-- Кастомный курсор — два элемента, позиционируются через JS -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
 
   <!-- ====== НАВИГАЦИЯ ====== -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-cream/80 backdrop-blur-md border-b border-bark/10">
     <!--
-      fixed = навигация "прилипает" к верху при скролле
-      z-50 = навигация поверх всех других элементов
-      border-b = тонкая линия снизу
+      bg-cream/80 = наш кремовый цвет с прозрачностью 80%
+      backdrop-blur-md = размытие того что находится ЗА навигацией
+      Вместе дают эффект "матового стекла"
     -->
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-      <!--
-        max-w-6xl = максимальная ширина контента (не растягивается на весь экран)
-        mx-auto = центрируем контент по горизонтали
-        px-6 py-4 = отступы: px = по горизонтали, py = по вертикали
-        flex = выстраиваем элементы в строку
-        justify-between = один элемент слева, другой справа
-        items-center = выравниваем по вертикали по центру
-      -->
-
-      <!-- Логотип (просто текст) -->
-      <a href="#" class="text-xl font-bold text-indigo-600">
-        LandingPro
+      <a href="#" class="text-xl font-black tracking-tight text-bark">
+        Landing<span class="text-olive">Pro</span>
       </a>
-
-      <!-- Кнопка в навигации -->
-      <a href="#contact"
-         class="bg-indigo-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-indigo-700 transition-colors">
-        <!--
-          rounded-full = полностью скруглённые углы (таблетка)
-          hover:bg-indigo-700 = при наведении мыши цвет темнеет
-          transition-colors = плавная анимация смены цвета
-        -->
+      <a href="#contact" data-magnetic
+         class="bg-bark text-cream px-5 py-2 rounded-full text-sm font-medium hover:bg-olive transition-colors">
         Обсудить проект
       </a>
     </div>
   </nav>
 
 
-  <!-- ====== HERO — ГЛАВНЫЙ ЭКРАН ====== -->
-  <section class="min-h-screen flex items-center bg-gradient-to-br from-indigo-50 to-white pt-20">
-    <!--
-      min-h-screen = минимальная высота = 100% высоты экрана
-      flex items-center = центрируем содержимое по вертикали
-      bg-gradient-to-br = градиент от левого верха к правому низу
-      from-indigo-50 = начинается с очень светло-синего
-      to-white = заканчивается белым
-      pt-20 = отступ сверху (чтобы не перекрывалось навигацией)
-    -->
+  <!-- ====== HERO ====== -->
+  <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
 
-    <div class="max-w-6xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <!-- Декоративные пятна — hero-orb реагируют на движение мыши -->
+    <div class="orb hero-orb w-96 h-96 bg-amber-300/40 top-10 -right-20"></div>
+    <div class="orb hero-orb w-72 h-72 bg-stone-400/30 bottom-20 left-10"></div>
+
+    <!--
+      OUTLINE-ТЕКСТ — огромные полые буквы на фоне.
+      Они абсолютно позиционированы и не влияют на layout.
+      Создают визуальный объём в пустой правой части.
+    -->
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none select-none overflow-hidden">
+      <div class="font-display text-outline leading-none"
+           style="font-size: clamp(8rem, 20vw, 18rem); font-weight: 700; letter-spacing: -0.02em;">
+        PRO
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 py-24 w-full relative z-10">
+
+      <!-- Основной заголовок со scramble-эффектом при загрузке -->
+      <div class="animate">
+        <h1 class="font-display text-7xl lg:text-9xl font-bold text-bark leading-[0.9] tracking-tight mb-8">
+          <span class="scramble" data-text="Лендинг">Лендинг</span><br>
+          <em class="italic text-olive scramble" data-text="который">который</em><br>
+          <span class="scramble" data-text="продаёт.">продаёт.</span>
+        </h1>
+      </div>
       <!--
-        grid = сетка (как таблица, но гибкая)
-        grid-cols-1 = на мобильном: 1 колонка (всё в столбик)
-        lg:grid-cols-2 = на большом экране: 2 колонки рядом
-        gap-12 = расстояние между колонками
+        data-text — атрибут хранит целевой текст.
+        JS возьмёт его и "соберёт" слово из случайных символов.
+        Эффект работает при загрузке страницы.
       -->
 
-      <!-- Левая часть: текст -->
-      <div class="animate">
-        <!-- Маленький бейджик над заголовком -->
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-6">
-          Лендинги под ключ
-        </span>
-
-        <!-- Главный заголовок -->
-        <h1 class="text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-6">
-          Лендинг который
-          <span class="text-indigo-600">продаёт</span>
-          за 7 дней
-        </h1>
-        <!--
-          text-5xl = большой размер текста
-          font-black = максимально жирный
-          leading-tight = плотный межстрочный интервал
-          span с другим цветом — выделяем ключевое слово
-        -->
-
-        <!-- Подзаголовок — уточняет предложение -->
-        <p class="text-xl text-gray-500 mb-10 leading-relaxed">
-          Создаём конверсионные лендинги для бизнеса. Дизайн, текст, аналитика —
-          всё включено. Первые заявки уже в день запуска.
+      <!-- Нижняя строка: описание + кнопки -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end mt-16 animate delay-2">
+        <p class="text-lg text-bark/60 leading-relaxed max-w-md">
+          Создаём конверсионные лендинги для бизнеса —
+          с дизайном, текстом и аналитикой под ключ.
+          Первые заявки уже в день запуска.
         </p>
 
-        <!-- Кнопки действия -->
-        <div class="flex flex-wrap gap-4">
-          <a href="#contact"
-             class="bg-indigo-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-indigo-700 transition-all hover:shadow-lg hover:-translate-y-0.5">
-            <!--
-              hover:-translate-y-0.5 = кнопка чуть поднимается при наведении
-              hover:shadow-lg = появляется тень при наведении
-              Вместе создают эффект "нажатия снизу вверх"
-            -->
-            Получить бесплатный расчёт
+        <div class="flex flex-wrap gap-4 lg:justify-end">
+          <a href="#contact" data-magnetic
+             class="bg-bark text-cream px-8 py-4 rounded-full text-base font-semibold hover:bg-olive transition-all">
+            Получить расчёт
           </a>
-          <a href="#portfolio"
-             class="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-full text-lg font-semibold hover:border-indigo-600 hover:text-indigo-600 transition-colors">
-            Смотреть работы
+          <a href="#portfolio" data-magnetic
+             class="border border-bark/30 text-bark px-8 py-4 rounded-full text-base font-medium hover:border-bark transition-colors">
+            Смотреть работы →
           </a>
-        </div>
-
-        <!-- Социальное доказательство под кнопками -->
-        <div class="flex items-center gap-6 mt-10">
-          <div class="text-center">
-            <div class="text-3xl font-black text-gray-900">120+</div>
-            <div class="text-sm text-gray-500">проектов</div>
-          </div>
-          <div class="w-px h-12 bg-gray-200"></div>
-          <!-- w-px = ширина 1px (вертикальная линия-разделитель) -->
-          <div class="text-center">
-            <div class="text-3xl font-black text-gray-900">7 дней</div>
-            <div class="text-sm text-gray-500">средний срок</div>
-          </div>
-          <div class="w-px h-12 bg-gray-200"></div>
-          <div class="text-center">
-            <div class="text-3xl font-black text-gray-900">4.9 ★</div>
-            <div class="text-sm text-gray-500">рейтинг</div>
-          </div>
         </div>
       </div>
 
-      <!-- Правая часть: визуальный элемент -->
-      <div class="hidden lg:flex justify-center items-center animate delay-2">
-        <!--
-          hidden = скрыто на мобильном (нет места)
-          lg:flex = показывается только на большом экране
-        -->
-
-        <!-- Имитация экрана браузера с макетом сайта -->
-        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
-          <!-- Верхняя панель браузера -->
-          <div class="bg-gray-100 px-4 py-3 flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-red-400"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
-            <div class="w-3 h-3 rounded-full bg-green-400"></div>
-            <!-- Три кружка — имитация кнопок macOS / браузера -->
-            <div class="flex-1 bg-white rounded-full px-3 py-1 text-xs text-gray-400 ml-2">
-              landingpro.ru
-            </div>
-          </div>
-
-          <!-- Содержимое "экрана" -->
-          <div class="p-6 space-y-4">
-            <!-- space-y-4 = вертикальные отступы между дочерними элементами -->
-            <div class="h-6 bg-indigo-100 rounded-full w-3/4"></div>
-            <div class="h-4 bg-gray-100 rounded-full w-full"></div>
-            <div class="h-4 bg-gray-100 rounded-full w-5/6"></div>
-            <div class="h-10 bg-indigo-600 rounded-full w-2/5 mt-6"></div>
-            <!-- Это просто цветные прямоугольники имитирующие текст и кнопку -->
-
-            <div class="grid grid-cols-3 gap-3 mt-6">
-              <div class="h-20 bg-gray-50 rounded-xl border border-gray-100"></div>
-              <div class="h-20 bg-gray-50 rounded-xl border border-gray-100"></div>
-              <div class="h-20 bg-gray-50 rounded-xl border border-gray-100"></div>
-            </div>
-          </div>
+      <!-- Цифры -->
+      <div class="flex items-center gap-12 mt-20 pt-10 border-t border-bark/10 animate delay-3">
+        <div>
+          <div class="text-4xl font-black text-bark">120+</div>
+          <div class="text-sm text-bark/50 mt-1">проектов</div>
+        </div>
+        <div>
+          <div class="text-4xl font-black text-bark">7 дней</div>
+          <div class="text-sm text-bark/50 mt-1">средний срок</div>
+        </div>
+        <div>
+          <div class="text-4xl font-black text-bark">4.9 ★</div>
+          <div class="text-sm text-bark/50 mt-1">рейтинг</div>
         </div>
       </div>
 
@@ -216,104 +286,92 @@
   </section>
 
 
-  <!-- ====== УСЛУГИ ====== -->
-  <section class="py-24 bg-white">
+  <!-- ====== ДВОЙНАЯ ДИАГОНАЛЬНАЯ БЕГУЩАЯ СТРОКА ====== -->
+  <div class="relative py-6 overflow-hidden bg-sand -rotate-2 scale-110 my-8">
     <!--
-      section = смысловой блок страницы (как глава в книге)
-      py-24 = большие отступы сверху и снизу — блоки "дышат"
+      -rotate-2 = наклон всего блока на −2°
+      scale-110 = чуть шире чем экран — чтобы края не просвечивали
+      Два ряда двигаются в противоположные стороны.
     -->
+
+    <!-- Ряд 1: движется влево -->
+    <div class="overflow-hidden mb-3">
+      <div class="marquee-left">
+        <!-- Контент дублируется — иначе будет пауза в конце -->
+        <span class="text-bark/40 font-display text-2xl font-bold mr-12">Дизайн&nbsp;·&nbsp;Конверсия&nbsp;·&nbsp;7 дней&nbsp;·&nbsp;Под ключ&nbsp;·&nbsp;Лендинги&nbsp;·&nbsp;Продажи&nbsp;·&nbsp;Аналитика&nbsp;·&nbsp;Результат&nbsp;·&nbsp;</span>
+        <span class="text-bark/40 font-display text-2xl font-bold mr-12">Дизайн&nbsp;·&nbsp;Конверсия&nbsp;·&nbsp;7 дней&nbsp;·&nbsp;Под ключ&nbsp;·&nbsp;Лендинги&nbsp;·&nbsp;Продажи&nbsp;·&nbsp;Аналитика&nbsp;·&nbsp;Результат&nbsp;·&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- Ряд 2: движется вправо, курсивом -->
+    <div class="overflow-hidden">
+      <div class="marquee-right">
+        <span class="text-olive/60 font-display text-2xl italic mr-12">120+ проектов&nbsp;·&nbsp;Фиксированная цена&nbsp;·&nbsp;Поддержка 30 дней&nbsp;·&nbsp;Быстрая загрузка&nbsp;·&nbsp;SEO&nbsp;·&nbsp;Мобильная адаптация&nbsp;·&nbsp;</span>
+        <span class="text-olive/60 font-display text-2xl italic mr-12">120+ проектов&nbsp;·&nbsp;Фиксированная цена&nbsp;·&nbsp;Поддержка 30 дней&nbsp;·&nbsp;Быстрая загрузка&nbsp;·&nbsp;SEO&nbsp;·&nbsp;Мобильная адаптация&nbsp;·&nbsp;</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====== УСЛУГИ ====== -->
+  <section class="py-24 bg-sand">
     <div class="max-w-6xl mx-auto px-6">
 
-      <!-- Заголовок блока -->
-      <div class="text-center mb-16 animate">
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
-          Что мы делаем
-        </span>
-        <h2 class="text-4xl font-black text-gray-900 mb-4">Полный цикл создания лендинга</h2>
-        <p class="text-xl text-gray-500 max-w-2xl mx-auto">
-          От идеи до первой заявки — берём на себя всё
+      <div class="flex items-end justify-between mb-16 animate">
+        <h2 class="font-display text-5xl lg:text-6xl font-bold text-bark leading-tight">
+          Что входит<br>в работу
+        </h2>
+        <p class="hidden lg:block text-bark/50 max-w-xs text-right">
+          Полный цикл — от идеи до первой заявки
         </p>
       </div>
 
-      <!-- Сетка карточек услуг -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-bark/10">
         <!--
-          md:grid-cols-2 = на планшете 2 колонки
-          lg:grid-cols-3 = на ноутбуке/десктопе 3 колонки
-          gap-8 = расстояние между карточками
+          gap-px bg-bark/10 = трюк: ячейки сетки разделяются
+          тонкими линиями цвета фона — эффект таблицы без border.
         -->
 
         <!-- Карточка 1 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-1">
-          <!--
-            group = позволяет дочерним элементам реагировать на hover родителя
-            rounded-2xl = сильно скруглённые углы
-            transition-all = анимируем все изменения при наведении
-          -->
-          <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
-            <!-- group-hover:bg-indigo-600 = иконка меняет фон когда наводим на карточку -->
-            <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-            <!-- SVG = векторная иконка, масштабируется без потери качества -->
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Дизайн и вёрстка</h3>
-          <p class="text-gray-500 leading-relaxed">Уникальный дизайн под ваш бренд. Адаптация под все устройства — от телефона до большого монитора.</p>
+        <div class="bg-sand p-8 hover:bg-cream transition-colors group animate delay-1">
+          <div class="text-3xl font-black text-bark/20 mb-6 group-hover:text-olive/40 transition-colors">01</div>
+          <h3 class="text-lg font-bold text-bark mb-3">Дизайн и вёрстка</h3>
+          <p class="text-bark/55 leading-relaxed text-sm">Уникальный дизайн под ваш бренд. Адаптация под все устройства.</p>
         </div>
 
         <!-- Карточка 2 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-2">
-          <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
-            <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Продающий текст</h3>
-          <p class="text-gray-500 leading-relaxed">Пишем тексты которые объясняют ценность и закрывают возражения. Не "вода" — конкретика и выгоды.</p>
+        <div class="bg-sand p-8 hover:bg-cream transition-colors group animate delay-2">
+          <div class="text-3xl font-black text-bark/20 mb-6 group-hover:text-olive/40 transition-colors">02</div>
+          <h3 class="text-lg font-bold text-bark mb-3">Продающий текст</h3>
+          <p class="text-bark/55 leading-relaxed text-sm">Тексты которые объясняют ценность и закрывают возражения.</p>
         </div>
 
         <!-- Карточка 3 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-3">
-          <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
-            <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Аналитика и SEO</h3>
-          <p class="text-gray-500 leading-relaxed">Настраиваем Яндекс.Метрику, цели конверсий и базовое SEO. Вы будете видеть откуда приходят клиенты.</p>
+        <div class="bg-sand p-8 hover:bg-cream transition-colors group animate delay-3">
+          <div class="text-3xl font-black text-bark/20 mb-6 group-hover:text-olive/40 transition-colors">03</div>
+          <h3 class="text-lg font-bold text-bark mb-3">Аналитика и SEO</h3>
+          <p class="text-bark/55 leading-relaxed text-sm">Яндекс.Метрика, цели конверсий, базовая поисковая оптимизация.</p>
         </div>
 
         <!-- Карточка 4 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-1">
-          <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
-            <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Быстрая загрузка</h3>
-          <p class="text-gray-500 leading-relaxed">Оптимизируем скорость — медленный сайт теряет половину посетителей. Ваш лендинг загрузится за секунду.</p>
+        <div class="bg-sand p-8 hover:bg-cream transition-colors group animate delay-1">
+          <div class="text-3xl font-black text-bark/20 mb-6 group-hover:text-olive/40 transition-colors">04</div>
+          <h3 class="text-lg font-bold text-bark mb-3">Быстрая загрузка</h3>
+          <p class="text-bark/55 leading-relaxed text-sm">Медленный сайт теряет половину посетителей. Ваш загрузится за секунду.</p>
         </div>
 
         <!-- Карточка 5 -->
-        <div class="group p-8 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all animate delay-2">
-          <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition-colors">
-            <svg class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Поддержка 30 дней</h3>
-          <p class="text-gray-500 leading-relaxed">После запуска остаёмся на связи. Правки, вопросы, мелкие доработки — всё включено в течение месяца.</p>
+        <div class="bg-sand p-8 hover:bg-cream transition-colors group animate delay-2">
+          <div class="text-3xl font-black text-bark/20 mb-6 group-hover:text-olive/40 transition-colors">05</div>
+          <h3 class="text-lg font-bold text-bark mb-3">Поддержка 30 дней</h3>
+          <p class="text-bark/55 leading-relaxed text-sm">После запуска остаёмся на связи. Правки включены в течение месяца.</p>
         </div>
 
-        <!-- Карточка 6 — выделяем цветом -->
-        <div class="group p-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all animate delay-3">
-          <div class="w-14 h-14 bg-indigo-500 rounded-xl flex items-center justify-center mb-6">
-            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-white mb-3">Фиксированная цена</h3>
-          <p class="text-indigo-200 leading-relaxed">Называем цену до старта и не меняем её. Никаких скрытых платежей и "это не входило в договор".</p>
+        <!-- Карточка 6 — тёмная -->
+        <div class="bg-bark p-8 group animate delay-3">
+          <div class="text-3xl font-black text-cream/20 mb-6">06</div>
+          <h3 class="text-lg font-bold text-cream mb-3">Фиксированная цена</h3>
+          <p class="text-cream/55 leading-relaxed text-sm">Называем цену до старта и не меняем её. Никаких скрытых платежей.</p>
         </div>
 
       </div>
@@ -322,145 +380,231 @@
 
 
   <!-- ====== КАК МЫ РАБОТАЕМ ====== -->
-  <section class="py-24 bg-gray-50">
+  <section class="py-24 bg-cream">
     <div class="max-w-6xl mx-auto px-6">
 
-      <div class="text-center mb-16 animate">
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
-          Процесс
-        </span>
-        <h2 class="text-4xl font-black text-gray-900 mb-4">4 шага до готового лендинга</h2>
-        <p class="text-xl text-gray-500">Понятный процесс без неожиданностей</p>
+      <div class="text-center mb-20 animate">
+        <h2 class="font-display text-5xl lg:text-6xl font-bold text-bark">4 шага до готового лендинга</h2>
       </div>
 
-      <!-- Шаги -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-
-        <!-- Шаг 1 -->
-        <div class="relative animate delay-1">
-          <!-- Номер шага -->
-          <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
-            1
-          </div>
-          <!-- Линия-соединитель между шагами (скрыта на мобильном) -->
-          <div class="hidden lg:block absolute top-6 left-12 w-full h-0.5 bg-indigo-100"></div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Бриф и анализ</h3>
-          <p class="text-gray-500">Изучаем ваш бизнес, конкурентов и целевую аудиторию. Занимает 1 день.</p>
+        <div class="animate delay-1">
+          <div class="w-10 h-10 bg-bark text-cream rounded-lg flex items-center justify-center text-sm font-black mb-6">1</div>
+          <h3 class="font-bold text-bark mb-2">Бриф и анализ</h3>
+          <p class="text-bark/55 text-sm leading-relaxed">Изучаем бизнес, конкурентов и аудиторию. 1 день.</p>
         </div>
-
-        <!-- Шаг 2 -->
-        <div class="relative animate delay-2">
-          <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
-            2
-          </div>
-          <div class="hidden lg:block absolute top-6 left-12 w-full h-0.5 bg-indigo-100"></div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Прототип</h3>
-          <p class="text-gray-500">Показываем структуру страницы до дизайна. Вы утверждаете логику.</p>
+        <div class="animate delay-2">
+          <div class="w-10 h-10 bg-bark text-cream rounded-lg flex items-center justify-center text-sm font-black mb-6">2</div>
+          <h3 class="font-bold text-bark mb-2">Прототип</h3>
+          <p class="text-bark/55 text-sm leading-relaxed">Структура страницы до дизайна. Вы утверждаете логику.</p>
         </div>
-
-        <!-- Шаг 3 -->
-        <div class="relative animate delay-3">
-          <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
-            3
-          </div>
-          <div class="hidden lg:block absolute top-6 left-12 w-full h-0.5 bg-indigo-100"></div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Дизайн и вёрстка</h3>
-          <p class="text-gray-500">Создаём дизайн и верстаем. Показываем промежуточный результат.</p>
+        <div class="animate delay-3">
+          <div class="w-10 h-10 bg-bark text-cream rounded-lg flex items-center justify-center text-sm font-black mb-6">3</div>
+          <h3 class="font-bold text-bark mb-2">Дизайн и вёрстка</h3>
+          <p class="text-bark/55 text-sm leading-relaxed">Создаём и верстаем. Показываем промежуточный результат.</p>
         </div>
-
-        <!-- Шаг 4 -->
         <div class="animate delay-4">
-          <div class="w-12 h-12 bg-green-500 text-white rounded-xl flex items-center justify-center text-xl font-black mb-6">
-            ✓
-          </div>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Запуск</h3>
-          <p class="text-gray-500">Размещаем лендинг, настраиваем аналитику и передаём вам доступы.</p>
+          <div class="w-10 h-10 bg-olive text-cream rounded-lg flex items-center justify-center text-sm font-black mb-6">✓</div>
+          <h3 class="font-bold text-bark mb-2">Запуск</h3>
+          <p class="text-bark/55 text-sm leading-relaxed">Размещаем, настраиваем аналитику, передаём доступы.</p>
         </div>
-
       </div>
     </div>
   </section>
 
 
-  <!-- ====== ПОРТФОЛИО ====== -->
-  <section id="portfolio" class="py-24 bg-white">
-    <!--
-      id="portfolio" — уникальный идентификатор блока.
-      Кнопка "Смотреть работы" в Hero ссылается на #portfolio —
-      при клике браузер плавно прокрутит страницу до этого блока.
-    -->
-    <div class="max-w-6xl mx-auto px-6">
+  <!-- ====== МАНИФЕСТ — STICKY LAYOUT ====== -->
+  <section class="bg-bark py-32 overflow-hidden relative" data-dark>
+    <div class="orb w-80 h-80 bg-amber-700/20 top-0 right-0"></div>
 
-      <div class="text-center mb-16 animate">
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
-          Портфолио
-        </span>
-        <h2 class="text-4xl font-black text-gray-900 mb-4">Примеры наших работ</h2>
-        <p class="text-xl text-gray-500">Реальные проекты — реальные результаты</p>
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+      <!-- Лейбл -->
+      <div class="flex items-center gap-6 mb-20 animate">
+        <span class="text-cream/30 text-sm font-medium tracking-widest uppercase">Почему мы</span>
+        <div class="flex-1 h-px bg-cream/10"></div>
       </div>
 
-      <!-- Сетка проектов -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!--
+        Три ряда — каждый: [карточка слева] + [текст справа].
+        Карточка содержит номер, градиент и подпись своего блока.
+        Скроллятся вместе как единое целое.
+      -->
+      <div class="space-y-8">
 
-        <!-- Проект 1 -->
-        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all animate delay-1">
-          <!-- overflow-hidden = содержимое не вылезает за скруглённые углы -->
+        <!-- Ряд 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate delay-1">
 
-          <!-- Превью проекта (цветной блок вместо скриншота) -->
-          <div class="h-48 bg-gradient-to-br from-blue-400 to-indigo-600 relative overflow-hidden">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white text-center">
-                <!-- bg-white/20 = белый с прозрачностью 20% -->
-                <div class="text-2xl font-black">FitLife</div>
-                <div class="text-sm opacity-80">Фитнес-клуб</div>
-              </div>
+          <!-- Карточка -->
+          <div class="rounded-2xl overflow-hidden relative h-72"
+               style="background: linear-gradient(135deg, #6B5B3E 0%, #2C2416 100%)">
+            <!-- Декоративный outline-номер внутри карточки -->
+            <div class="absolute top-6 left-8 font-display font-bold leading-none select-none"
+                 style="font-size: 8rem;
+                        -webkit-text-stroke: 1px rgba(240,233,220,0.12);
+                        color: transparent; line-height: 1;">
+              01
+            </div>
+            <!-- Подпись внизу -->
+            <div class="absolute inset-0 flex flex-col justify-end p-8">
+              <p class="font-display text-3xl italic text-cream/70 mb-1">Без шаблонов.</p>
+              <div class="w-8 h-px bg-cream/30"></div>
             </div>
           </div>
 
-          <div class="p-6">
-            <h3 class="font-bold text-gray-900 mb-1">Лендинг фитнес-клуба</h3>
-            <p class="text-gray-500 text-sm mb-4">Увеличили запись на пробное занятие на 340%</p>
-            <div class="flex items-center gap-2">
-              <span class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">+340% конверсия</span>
+          <!-- Текст -->
+          <div class="py-4">
+            <div class="text-cream/25 text-xs font-medium tracking-widest uppercase mb-5">01 / 03</div>
+            <h3 class="font-display text-4xl lg:text-5xl font-bold text-cream mb-5 leading-tight">
+              Без шаблонов.<br>
+              <em class="italic text-cream/45">Под вас.</em>
+            </h3>
+            <p class="text-cream/45 leading-relaxed">
+              Каждый лендинг создаётся с нуля под конкретный бизнес и аудиторию.
+              Никаких конструкторов, никакого copy-paste чужих решений.
+              Мы изучаем ваших клиентов и строим страницу вокруг их болей.
+            </p>
+          </div>
+        </div>
+
+        <!-- Ряд 2 — карточка справа для чередования -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate delay-2">
+
+          <!-- Текст (идёт первым в HTML, но карточка визуально справа) -->
+          <div class="py-4 lg:order-1">
+            <div class="text-cream/25 text-xs font-medium tracking-widest uppercase mb-5">02 / 03</div>
+            <h3 class="font-display text-4xl lg:text-5xl font-bold text-cream mb-5 leading-tight">
+              Результат<br>
+              <em class="italic text-cream/45">измеряется.</em>
+            </h3>
+            <p class="text-cream/45 leading-relaxed">
+              Красивый сайт — не цель. Цель — заявки и продажи.
+              Настраиваем Яндекс.Метрику, цели конверсий и следим
+              за воронкой с первого дня после запуска.
+            </p>
+          </div>
+
+          <!-- Карточка справа -->
+          <div class="rounded-2xl overflow-hidden relative h-72 lg:order-2"
+               style="background: linear-gradient(135deg, #8B6914 0%, #3D2E08 100%)">
+            <div class="absolute top-6 left-8 font-display font-bold leading-none select-none"
+                 style="font-size: 8rem;
+                        -webkit-text-stroke: 1px rgba(240,233,220,0.12);
+                        color: transparent; line-height: 1;">
+              02
+            </div>
+            <div class="absolute inset-0 flex flex-col justify-end p-8">
+              <p class="font-display text-3xl italic text-cream/70 mb-1">Результат.</p>
+              <div class="w-8 h-px bg-cream/30"></div>
             </div>
           </div>
         </div>
 
-        <!-- Проект 2 -->
-        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all animate delay-2">
-          <div class="h-48 bg-gradient-to-br from-orange-400 to-pink-600 relative overflow-hidden">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white text-center">
-                <div class="text-2xl font-black">LegalPro</div>
-                <div class="text-sm opacity-80">Юридические услуги</div>
-              </div>
+        <!-- Ряд 3 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center animate delay-3">
+
+          <!-- Карточка слева -->
+          <div class="rounded-2xl overflow-hidden relative h-72"
+               style="background: linear-gradient(135deg, #3A4A2E 0%, #1A2210 100%)">
+            <div class="absolute top-6 left-8 font-display font-bold leading-none select-none"
+                 style="font-size: 8rem;
+                        -webkit-text-stroke: 1px rgba(240,233,220,0.12);
+                        color: transparent; line-height: 1;">
+              03
+            </div>
+            <div class="absolute inset-0 flex flex-col justify-end p-8">
+              <p class="font-display text-3xl italic text-cream/70 mb-1">В срок.</p>
+              <div class="w-8 h-px bg-cream/30"></div>
             </div>
           </div>
-          <div class="p-6">
-            <h3 class="font-bold text-gray-900 mb-1">Юридическая фирма</h3>
-            <p class="text-gray-500 text-sm mb-4">С нуля до 45 заявок в месяц за 2 недели</p>
-            <div class="flex items-center gap-2">
-              <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">45 заявок/мес</span>
-            </div>
+
+          <!-- Текст -->
+          <div class="py-4">
+            <div class="text-cream/25 text-xs font-medium tracking-widest uppercase mb-5">03 / 03</div>
+            <h3 class="font-display text-4xl lg:text-5xl font-bold text-cream mb-5 leading-tight">
+              Честно<br>
+              <em class="italic text-cream/45">и в срок.</em>
+            </h3>
+            <p class="text-cream/45 leading-relaxed">
+              Называем реальный срок и реальную цену до старта.
+              Если что-то меняется — говорим сразу, не после сдачи.
+              За 5 лет ни одного проекта с задержкой больше дня.
+            </p>
           </div>
         </div>
 
-        <!-- Проект 3 -->
-        <div class="group rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all animate delay-3">
-          <div class="h-48 bg-gradient-to-br from-green-400 to-teal-600 relative overflow-hidden">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white text-center">
-                <div class="text-2xl font-black">EduStart</div>
-                <div class="text-sm opacity-80">Онлайн-курсы</div>
+      </div>
+
+      <!-- Цитата внизу -->
+      <div class="mt-32 animate delay-4">
+        <p class="font-display text-5xl lg:text-6xl font-bold text-cream leading-tight max-w-3xl">
+          Лендинг — это не страница.
+          <span class="text-cream/25">Это продавец который работает 24/7.</span>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ====== ПОРТФОЛИО ====== -->
+  <section id="portfolio" class="py-24 bg-cream">
+    <div class="max-w-6xl mx-auto px-6">
+
+      <div class="flex items-end justify-between mb-16 animate">
+        <h2 class="font-display text-5xl lg:text-6xl font-bold text-bark leading-tight">
+          Примеры<br>наших работ
+        </h2>
+        <p class="hidden lg:block text-bark/40 text-sm">Реальные проекты — реальные результаты</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="group rounded-2xl overflow-hidden animate delay-1">
+          <div class="h-52 bg-gradient-to-br from-stone-400 to-stone-600 relative overflow-hidden">
+            <div class="orb w-40 h-40 bg-amber-400/40 -top-10 -right-10"></div>
+            <div class="absolute inset-0 flex items-end p-6">
+              <div>
+                <div class="text-2xl font-black text-white">FitLife</div>
+                <div class="text-sm text-white/60">Фитнес-клуб</div>
               </div>
             </div>
           </div>
-          <div class="p-6">
-            <h3 class="font-bold text-gray-900 mb-1">Платформа онлайн-курсов</h3>
-            <p class="text-gray-500 text-sm mb-4">Стоимость заявки снизилась с 800₽ до 210₽</p>
-            <div class="flex items-center gap-2">
-              <span class="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">-74% цена заявки</span>
+          <div class="bg-sand p-6">
+            <p class="text-bark/60 text-sm mb-3">Увеличили запись на пробное занятие на 340%</p>
+            <span class="text-xs font-semibold text-olive bg-olive/10 px-3 py-1 rounded-full">+340% конверсия</span>
+          </div>
+        </div>
+
+        <div class="group rounded-2xl overflow-hidden animate delay-2">
+          <div class="h-52 bg-gradient-to-br from-amber-700 to-stone-800 relative overflow-hidden">
+            <div class="orb w-40 h-40 bg-amber-500/30 -bottom-10 -left-10"></div>
+            <div class="absolute inset-0 flex items-end p-6">
+              <div>
+                <div class="text-2xl font-black text-white">LegalPro</div>
+                <div class="text-sm text-white/60">Юридические услуги</div>
+              </div>
             </div>
+          </div>
+          <div class="bg-sand p-6">
+            <p class="text-bark/60 text-sm mb-3">С нуля до 45 заявок в месяц за 2 недели</p>
+            <span class="text-xs font-semibold text-olive bg-olive/10 px-3 py-1 rounded-full">45 заявок/мес</span>
+          </div>
+        </div>
+
+        <div class="group rounded-2xl overflow-hidden animate delay-3">
+          <div class="h-52 bg-gradient-to-br from-stone-500 to-amber-900 relative overflow-hidden">
+            <div class="orb w-40 h-40 bg-stone-300/20 top-0 right-0"></div>
+            <div class="absolute inset-0 flex items-end p-6">
+              <div>
+                <div class="text-2xl font-black text-white">EduStart</div>
+                <div class="text-sm text-white/60">Онлайн-курсы</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-sand p-6">
+            <p class="text-bark/60 text-sm mb-3">Стоимость заявки снизилась с 800₽ до 210₽</p>
+            <span class="text-xs font-semibold text-olive bg-olive/10 px-3 py-1 rounded-full">-74% цена заявки</span>
           </div>
         </div>
 
@@ -470,89 +614,59 @@
 
 
   <!-- ====== ОТЗЫВЫ ====== -->
-  <section class="py-24 bg-gray-50">
+  <section class="py-24 bg-sand">
     <div class="max-w-6xl mx-auto px-6">
 
       <div class="text-center mb-16 animate">
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
-          Отзывы
-        </span>
-        <h2 class="text-4xl font-black text-gray-900 mb-4">Что говорят клиенты</h2>
-        <p class="text-xl text-gray-500">Не верьте нам на слово</p>
+        <h2 class="font-display text-5xl lg:text-6xl font-bold text-bark">Что говорят клиенты</h2>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        <!-- Отзыв 1 -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all animate delay-1">
-          <!-- Звёзды -->
+        <div class="bg-cream p-8 rounded-2xl animate delay-1">
           <div class="flex gap-1 mb-6">
-            <!-- Повторяем иконку звезды 5 раз -->
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <span class="text-amber-600">★★★★★</span>
           </div>
-          <!-- Текст отзыва -->
-          <p class="text-gray-600 leading-relaxed mb-6">
-            "Сделали лендинг за 6 дней. Уже на третий день после запуска пришла первая заявка. За месяц — 23 обращения. До этого сайт висел полгода и молчал."
+          <p class="text-bark/70 leading-relaxed mb-6 text-sm">
+            "Сделали лендинг за 6 дней. Уже на третий день после запуска пришла первая заявка. За месяц — 23 обращения."
           </p>
-          <!-- Автор -->
-          <div class="flex items-center gap-4">
-            <!-- Аватар (инициалы вместо фото) -->
-            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-600">
-              АМ
-            </div>
+          <div class="flex items-center gap-3 pt-6 border-t border-bark/10">
+            <div class="w-10 h-10 bg-bark/10 rounded-full flex items-center justify-center text-xs font-bold text-bark">АМ</div>
             <div>
-              <div class="font-semibold text-gray-900">Алексей Морозов</div>
-              <div class="text-sm text-gray-500">Владелец фитнес-клуба FitLife</div>
+              <div class="font-semibold text-bark text-sm">Алексей Морозов</div>
+              <div class="text-xs text-bark/40">Владелец FitLife</div>
             </div>
           </div>
         </div>
 
-        <!-- Отзыв 2 -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all animate delay-2">
+        <div class="bg-cream p-8 rounded-2xl animate delay-2">
           <div class="flex gap-1 mb-6">
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <span class="text-amber-600">★★★★★</span>
           </div>
-          <p class="text-gray-600 leading-relaxed mb-6">
-            "Работали чётко по договору, без лишних вопросов. Сами предложили структуру, написали тексты. Я только согласовывала. Результат — очередь из клиентов на 2 месяца вперёд."
+          <p class="text-bark/70 leading-relaxed mb-6 text-sm">
+            "Сами предложили структуру, написали тексты. Я только согласовывала. Результат — очередь из клиентов на 2 месяца."
           </p>
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center font-bold text-pink-600">
-              ЕК
-            </div>
+          <div class="flex items-center gap-3 pt-6 border-t border-bark/10">
+            <div class="w-10 h-10 bg-bark/10 rounded-full flex items-center justify-center text-xs font-bold text-bark">ЕК</div>
             <div>
-              <div class="font-semibold text-gray-900">Елена Козлова</div>
-              <div class="text-sm text-gray-500">Основатель LegalPro</div>
+              <div class="font-semibold text-bark text-sm">Елена Козлова</div>
+              <div class="text-xs text-bark/40">Основатель LegalPro</div>
             </div>
           </div>
         </div>
 
-        <!-- Отзыв 3 -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all animate delay-3">
+        <div class="bg-cream p-8 rounded-2xl animate delay-3">
           <div class="flex gap-1 mb-6">
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <span class="text-amber-600">★★★★★</span>
           </div>
-          <p class="text-gray-600 leading-relaxed mb-6">
-            "Бюджет на рекламу остался тот же, а заявок стало в 4 раза больше. Оказывается дело было в лендинге, а не в рекламе. Теперь понимаю зачем нужен нормальный сайт."
+          <p class="text-bark/70 leading-relaxed mb-6 text-sm">
+            "Бюджет на рекламу остался тот же, а заявок стало в 4 раза больше. Дело было в лендинге, а не в рекламе."
           </p>
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center font-bold text-green-600">
-              ДВ
-            </div>
+          <div class="flex items-center gap-3 pt-6 border-t border-bark/10">
+            <div class="w-10 h-10 bg-bark/10 rounded-full flex items-center justify-center text-xs font-bold text-bark">ДВ</div>
             <div>
-              <div class="font-semibold text-gray-900">Дмитрий Волков</div>
-              <div class="text-sm text-gray-500">Директор EduStart</div>
+              <div class="font-semibold text-bark text-sm">Дмитрий Волков</div>
+              <div class="text-xs text-bark/40">Директор EduStart</div>
             </div>
           </div>
         </div>
@@ -563,179 +677,207 @@
 
 
   <!-- ====== ФОРМА КОНТАКТОВ ====== -->
-  <section id="contact" class="py-24 bg-indigo-600">
-    <!--
-      id="contact" — сюда прокручивает кнопка "Обсудить проект" из навигации
-      и кнопка "Получить бесплатный расчёт" из Hero.
-      Фон сделали синим — финальный блок должен выделяться и звать к действию.
-    -->
-    <div class="max-w-2xl mx-auto px-6 text-center">
+  <section id="contact" class="py-24 bg-bark relative overflow-hidden" data-dark>
+    <div class="orb w-96 h-96 bg-amber-700/20 -top-20 -left-20"></div>
+    <div class="orb w-64 h-64 bg-stone-500/20 bottom-0 right-0"></div>
 
-      <h2 class="text-4xl font-black text-white mb-4">
-        Готовы обсудить ваш проект?
+    <div class="max-w-2xl mx-auto px-6 text-center relative z-10">
+
+      <h2 class="font-display text-5xl lg:text-6xl font-bold text-cream mb-4 animate">
+        Готовы обсудить<br>ваш проект?
       </h2>
-      <p class="text-indigo-200 text-xl mb-12">
-        Оставьте заявку — ответим в течение часа и бесплатно рассчитаем стоимость
+      <p class="text-cream/40 mb-12 animate delay-1">
+        Оставьте заявку — ответим в течение часа
       </p>
 
-      <!-- Форма -->
-      <form class="bg-white rounded-2xl p-8 text-left space-y-6">
-        <!--
-          form = контейнер для полей ввода.
-          В реальном проекте у него был бы атрибут action (куда отправлять данные).
-          Пока оставляем без него — форма учебная.
-          space-y-6 = вертикальный отступ между полями
-        -->
+      <form class="bg-cream rounded-2xl p-8 text-left space-y-5 animate delay-2">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Поле: Имя -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2" for="name">
-              Ваше имя
-            </label>
-            <!--
-              label = подпись к полю ввода.
-              for="name" связывает подпись с полем input id="name" —
-              при клике на текст "Ваше имя" курсор встанет в поле.
-            -->
-            <input
-              type="text"
-              id="name"
-              placeholder="Александр"
-              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-            >
-            <!--
-              focus:outline-none = убираем стандартную синюю рамку браузера
-              focus:border-indigo-500 = добавляем свою рамку при фокусе
-              focus:ring-2 = мягкое свечение вокруг поля
-            -->
+            <label class="block text-xs font-semibold text-bark/50 mb-2 uppercase tracking-wider" for="name">Имя</label>
+            <input type="text" id="name" placeholder="Александр"
+              class="w-full bg-sand border-0 rounded-xl px-4 py-3 text-bark placeholder-bark/30 focus:outline-none focus:ring-2 focus:ring-olive/30 transition-all">
           </div>
-
-          <!-- Поле: Телефон -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2" for="phone">
-              Телефон или Telegram
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              placeholder="+7 (999) 000-00-00"
-              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-            >
+            <label class="block text-xs font-semibold text-bark/50 mb-2 uppercase tracking-wider" for="phone">Телефон</label>
+            <input type="tel" id="phone" placeholder="+7 (999) 000-00-00"
+              class="w-full bg-sand border-0 rounded-xl px-4 py-3 text-bark placeholder-bark/30 focus:outline-none focus:ring-2 focus:ring-olive/30 transition-all">
           </div>
         </div>
 
-        <!-- Поле: О проекте -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2" for="message">
-            Расскажите о вашем проекте
-          </label>
-          <textarea
-            id="message"
-            rows="4"
-            placeholder="Чем занимается ваш бизнес, что хотите получить от лендинга..."
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
-          ></textarea>
-          <!-- textarea = многострочное поле ввода, rows="4" = высота 4 строки -->
-          <!-- resize-none = запрещаем пользователю растягивать поле -->
+          <label class="block text-xs font-semibold text-bark/50 mb-2 uppercase tracking-wider" for="message">О проекте</label>
+          <textarea id="message" rows="4" placeholder="Расскажите о вашем бизнесе..."
+            class="w-full bg-sand border-0 rounded-xl px-4 py-3 text-bark placeholder-bark/30 focus:outline-none focus:ring-2 focus:ring-olive/30 transition-all resize-none"></textarea>
         </div>
 
-        <!-- Кнопка отправки -->
-        <button
-          type="submit"
-          class="w-full bg-indigo-600 text-white py-4 rounded-xl text-lg font-semibold hover:bg-indigo-700 transition-all hover:shadow-lg active:scale-95"
-        >
-          <!--
-            active:scale-95 = кнопка "вдавливается" при нажатии (уменьшается до 95%)
-            Создаёт физический эффект нажатия.
-          -->
+        <button type="submit"
+          class="w-full bg-bark text-cream py-4 rounded-xl font-semibold hover:bg-olive transition-all active:scale-95">
           Отправить заявку →
         </button>
 
-        <!-- Дисклеймер под кнопкой -->
-        <p class="text-center text-sm text-gray-400">
-          Нажимая кнопку, вы соглашаетесь с
-          <a href="#" class="underline hover:text-gray-600">политикой конфиденциальности</a>
+        <p class="text-center text-xs text-bark/30">
+          Нажимая кнопку, вы соглашаетесь с <a href="#" class="underline">политикой конфиденциальности</a>
         </p>
-
       </form>
     </div>
   </section>
 
 
   <!-- ====== ФУТЕР ====== -->
-  <footer class="bg-gray-900 py-10">
-    <!--
-      footer = нижняя часть страницы.
-      Обычно содержит: копирайт, контакты, ссылки на соцсети, юридические ссылки.
-    -->
+  <footer class="bg-bark border-t border-cream/10 py-8" data-dark>
     <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-
-      <div class="text-white font-bold text-xl">LandingPro</div>
-
-      <p class="text-gray-500 text-sm">
-        © 2026 LandingPro. Все права защищены.
-      </p>
-
-      <div class="flex gap-6 text-sm text-gray-500">
-        <a href="#" class="hover:text-white transition-colors">Политика конфиденциальности</a>
-        <a href="#contact" class="hover:text-white transition-colors">Связаться</a>
+      <div class="text-cream font-black text-lg">Landing<span class="text-cream/40">Pro</span></div>
+      <p class="text-cream/30 text-sm">© 2026 LandingPro. Все права защищены.</p>
+      <div class="flex gap-6 text-sm text-cream/30">
+        <a href="#" class="hover:text-cream/70 transition-colors">Политика конфиденциальности</a>
+        <a href="#contact" class="hover:text-cream/70 transition-colors">Связаться</a>
       </div>
-
     </div>
   </footer>
 
 
   <script>
-    /*
-      Intersection Observer — "наблюдатель пересечений".
-      Он следит: когда элемент входит в видимую область экрана —
-      вызывает нашу функцию.
+    /* ═══════════════════════════════════════════════════════════
+       1. КАСТОМНЫЙ КУРСОР
+       Два элемента: dot (точная позиция) и ring (с инерцией).
+       Ring догоняет реальную позицию через lerp (линейную интерп.)
+    ═══════════════════════════════════════════════════════════ */
+    const dot  = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
 
-      Это современный и эффективный способ.
-      Альтернатива — слушать событие scroll и вручную считать
-      координаты каждого элемента. Это медленнее и сложнее.
-    */
+    let mouseX = 0, mouseY = 0;   // реальная позиция мыши
+    let ringX  = 0, ringY  = 0;   // текущая позиция ring (с задержкой)
 
-    const observer = new IntersectionObserver(
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      /* dot следует мгновенно */
+      dot.style.left = mouseX + 'px';
+      dot.style.top  = mouseY + 'px';
+    });
+
+    /* ring анимируется через requestAnimationFrame с lerp:
+       каждый кадр ring делает 12% пути до реальной позиции — это и есть инерция */
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      ring.style.left = ringX + 'px';
+      ring.style.top  = ringY + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    /* Hover-состояние на интерактивных элементах */
+    document.querySelectorAll('a, button, [data-magnetic]').forEach((el) => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    });
+
+    /* Смена цвета курсора на тёмных секциях.
+       elementFromPoint возвращает элемент прямо под курсором —
+       проверяем есть ли среди его родителей [data-dark]. */
+    document.addEventListener('mousemove', (e) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const isDark = el && el.closest('[data-dark]');
+      document.body.classList.toggle('cursor-dark', !!isDark);
+    });
+
+
+    /* ═══════════════════════════════════════════════════════════
+       2. MAGNETIC BUTTONS
+       При движении мыши рядом с кнопкой она "притягивается".
+       Сила притяжения = расстояние * коэффициент (0.35).
+       При уходе мыши — плавный возврат через CSS transition.
+    ═══════════════════════════════════════════════════════════ */
+    document.querySelectorAll('[data-magnetic]').forEach((btn) => {
+      btn.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      document.addEventListener('mousemove', (e) => {
+        const rect     = btn.getBoundingClientRect();
+        const centerX  = rect.left + rect.width  / 2;
+        const centerY  = rect.top  + rect.height / 2;
+        const dx       = e.clientX - centerX;
+        const dy       = e.clientY - centerY;
+        const distance = Math.hypot(dx, dy);
+        const radius   = 90; // px — зона притяжения
+
+        if (distance < radius) {
+          const strength = (1 - distance / radius) * 0.35;
+          btn.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+        } else {
+          btn.style.transform = 'translate(0, 0)';
+        }
+      });
+    });
+
+
+    /* ═══════════════════════════════════════════════════════════
+       3. MOUSE PARALLAX в Hero
+       Орбы смещаются в сторону движения мыши — создают глубину.
+       Коэффициент маленький (0.02) чтобы эффект был тонким.
+    ═══════════════════════════════════════════════════════════ */
+    const heroOrbs = document.querySelectorAll('.hero-orb');
+    document.addEventListener('mousemove', (e) => {
+      const cx = window.innerWidth  / 2;
+      const cy = window.innerHeight / 2;
+      const dx = (e.clientX - cx) / cx; // от -1 до 1
+      const dy = (e.clientY - cy) / cy;
+
+      heroOrbs.forEach((orb, i) => {
+        const factor = (i % 2 === 0 ? 1 : -1) * 28; // орбы в разные стороны
+        orb.style.transform = `translate(${dx * factor}px, ${dy * factor}px)`;
+        orb.style.transition = 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)';
+      });
+    });
+
+
+    /* ═══════════════════════════════════════════════════════════
+       4. SCRAMBLE — текст собирается из случайных символов
+    ═══════════════════════════════════════════════════════════ */
+    const CHARS = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзиклмнопрстуфхцчшщъыьэюяABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function scramble(element, targetText, delay = 0) {
+      setTimeout(() => {
+        const duration = 900;
+        const start = Date.now();
+        const tick = () => {
+          const progress = Math.min((Date.now() - start) / duration, 1);
+          element.textContent = targetText.split('').map((char, i) => {
+            if (char === ' ' || char === '.') return char;
+            return progress > i / targetText.length
+              ? char
+              : CHARS[Math.floor(Math.random() * CHARS.length)];
+          }).join('');
+          if (progress < 1) requestAnimationFrame(tick);
+          else element.textContent = targetText;
+        };
+        requestAnimationFrame(tick);
+      }, delay);
+    }
+
+    window.addEventListener('load', () => {
+      document.querySelectorAll('.scramble').forEach((el, i) => {
+        scramble(el, el.getAttribute('data-text'), i * 300);
+      });
+    });
+
+
+    /* ═══════════════════════════════════════════════════════════
+       5. ПОЯВЛЕНИЕ ПРИ СКРОЛЛЕ (fade + slide up)
+    ═══════════════════════════════════════════════════════════ */
+    const scrollObs = new IntersectionObserver(
       (entries) => {
-        /*
-          entries — массив элементов которые изменили своё состояние
-          (вошли в экран или вышли из него).
-          Перебираем каждый:
-        */
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            /*
-              isIntersecting = true означает: элемент сейчас виден на экране.
-              Добавляем класс visible — CSS включит анимацию появления.
-            */
-            entry.target.classList.add('visible');
-            /*
-              После того как элемент появился — перестаём за ним следить.
-              Иначе анимация сбрасывалась бы при каждом прокруте вверх-вниз.
-            */
-            observer.unobserve(entry.target);
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            scrollObs.unobserve(e.target);
           }
         });
       },
-      {
-        /*
-          threshold: 0.1 — запускать анимацию когда 10% элемента
-          уже видно на экране. Если поставить 0 — анимация начнётся
-          как только хотя бы 1px элемента появится в поле зрения.
-        */
-        threshold: 0.1,
-      }
+      { threshold: 0.1 }
     );
-
-    /*
-      Находим все элементы с классом animate на странице
-      и начинаем за ними наблюдать.
-    */
-    document.querySelectorAll('.animate').forEach((el) => {
-      observer.observe(el);
-    });
+    document.querySelectorAll('.animate, .reveal-words').forEach((el) => scrollObs.observe(el));
   </script>
 
 </body>
